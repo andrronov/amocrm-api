@@ -20,15 +20,23 @@ main_b.addEventListener('click', () => {
    }).then(data => console.log(data)).catch(err => console.log('pizda', err))
 });
 
+async function getLeads(page, limit = 3){
+  try {
+    const data = await fetch('https://hivoco7680.amocrm.ru/api/v4/leads?page=2&limit=3', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${tokens.access_token}`,
+        'Content-Type': 'application/json'
+      }
+    })
+    return await data.json()
+  } catch (err) {
+    console.error('ошибка в получении данных: ', err);
+    const errorText = document.createTextNode(`Ошибка при получении данных: ${err}`);
+    document.body.appendChild(errorText);
+  }
+}
+
 get_b.addEventListener('click', () => {
-  fetch('https://hivoco7680.amocrm.ru/api/v4/leads', {
-    method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${tokens.access_token}`,
-      'Content-Type': 'application/json'
-    }
-  })
-  .then(response => response.json())
-  .then(data => console.log('Список сделок:', data))
-  .catch(error => console.error('Ошибка:', error));
+  getLeads()
 })
