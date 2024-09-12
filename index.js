@@ -1,28 +1,11 @@
-import { integration_id, redirect_uri, client_secret, code } from "./env.js";
 import { tokens } from "./answer.js";
 
-const main_b = document.querySelector('.main-btn');
 const get_b = document.querySelector('.get-btn');
-
-main_b.addEventListener('click', () => {
-  console.log('пошла родимая');
-   const authUrl = 'https://hivoco7680.amocrm.ru/oauth2/access_token';
-   fetch(authUrl, {
-    method: "POST",
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      "client_id": integration_id,
-      "client_secret": client_secret,
-      "grant_type": "authorization_code",
-      "code": code,
-      "redirect_uri": redirect_uri
-    })
-   }).then(data => console.log(data)).catch(err => console.log('pizda', err))
-});
+let page = 1; let limit = 3
 
 async function getLeads(page, limit = 3){
   try {
-    const data = await fetch('https://hivoco7680.amocrm.ru/api/v4/leads?page=2&limit=3', {
+    const data = await fetch(`https://hivoco7680.amocrm.ru/api/v4/leads?page=${page}&limit=${limit}`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${tokens.access_token}`,
@@ -31,12 +14,49 @@ async function getLeads(page, limit = 3){
     })
     return await data.json()
   } catch (err) {
-    console.error('ошибка в получении данных: ', err);
     const errorText = document.createTextNode(`Ошибка при получении данных: ${err}`);
     document.body.appendChild(errorText);
+    console.error('ошибка в получении данных: ', err);
   }
 }
 
-get_b.addEventListener('click', () => {
-  getLeads()
+function addTable(){
+  const table = document.createElement('table');
+  table.classList.add('amo-table');
+  table.innerHTML = `
+    <thead class="amo-table-head">
+      <tr class="amo-table-row">
+        <th class="amo-table-header">ID</th>
+        <th class="amo-table-header">Название</th>
+        <th class="amo-table-header">Бюджет сделки</th>
+      </tr>
+    </thead>
+    <tbody class="amo-table-body">
+    </tbody>
+  `;
+  document.body.appendChild(table);
+}
+
+get_b.addEventListener('click', async () => {
+  let isGetData = true
+  addTable()
+  
+  while(isGetData){
+    console.log('getting...');
+    const data = await getLeads(page++)
+    const leads = data._embedded.leads
+    leads.forEach(el => {
+      const row = document.createElement('tr');
+      row.classList.add('amo-table-row');
+      row.innerHTML = `
+        <th class="amo-table-data">${el.id}</th>
+        <th class="amo-table-data">${el.name}</th>
+        <th class="amo-table-data">${el.price}</th>
+      `;
+      document.querySelector('.amo-table-body').appendChild(row);
+    })
+    console.log(leads);
+
+    if(leads.length < limit) isGetData = false
+  }
 })
