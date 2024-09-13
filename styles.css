@@ -9,20 +9,13 @@
 a {
    text-decoration: none;
 }
-ul,
-ol,
-li {
+ul, ol, li {
    list-style: none;
 }
 img {
    vertical-align: top;
 }
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
+h1, h2, h3, h4, h5, h6 {
    font-weight: inherit;
    font-size: inherit;
 }
@@ -64,15 +57,31 @@ body {
 }
 
 .amo-table-row:hover {
+   cursor: pointer;
    background-color: #ddd;
 }
 
 .get-btn{
    margin-top: 15px;
+   color: white;
    width: max-content;
    align-self: center;
    border: none;
-   padding: 5px;
+   padding: 7.5px;
    font-size: 1.5rem;
    background-color: #4CAF50;
+}
+.get-btn:hover{
+   cursor: pointer;
+   background-color: #46e34b;
+}
+.get-btn:disabled{
+   cursor: default;
+   background-color: #2d702fb1;
+}
+
+.tab-content{
+   padding: 7.5px;
+   background-color: #c0f1c2;
+   height: 100px;
 }

@@ -36,9 +36,31 @@ function addTable(){
   `;
   document.body.appendChild(table);
 }
+function addRowInfo(rowElement){
+  const nextRow = document.createElement('tr');
+  nextRow.classList.add('tab-content')
+  nextRow.id = rowElement.id
+  nextRow.innerHTML = `
+    <th colspan="3">Дополнительная информация о сделке...</th> `
+  document.querySelector('tbody').insertBefore(nextRow, rowElement.nextElementSibling)
+}
+
+function showLeadInfo(rowElement, selectedRowId){
+  const tabContent = document.querySelector('.tab-content')
+
+  if(!tabContent){
+    addRowInfo(rowElement)
+  } else if (selectedRowId != tabContent?.id){
+    tabContent.remove()
+    addRowInfo(rowElement)
+  } else {
+    tabContent.remove()
+  }
+}
 
 get_b.addEventListener('click', async () => {
   let isGetData = true
+  get_b.disabled = true
   addTable()
   
   while(isGetData){
@@ -47,7 +69,9 @@ get_b.addEventListener('click', async () => {
     const leads = data._embedded.leads
     leads.forEach(el => {
       const row = document.createElement('tr');
-      row.classList.add('amo-table-row');
+      row.addEventListener('click', (event) => showLeadInfo(row, el.id))
+      row.classList.add('amo-table-row')
+      row.id = el.id
       row.innerHTML = `
         <th class="amo-table-data">${el.id}</th>
         <th class="amo-table-data">${el.name}</th>
@@ -60,3 +84,5 @@ get_b.addEventListener('click', async () => {
     if(leads.length < limit) isGetData = false
   }
 })
+
+// document.querySelectorAll('amo-table-row').forEach(el => el.addEventListener('click', () => console.log('clicked')))
