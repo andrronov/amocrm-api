@@ -3,6 +3,7 @@ import { tokens } from "./answer.js";
 const get_b = document.querySelector('.get-btn');
 let page = 1; let limit = 3
 
+// API
 async function getLeads(page, limit = 3){
   try {
     const data = await fetch(`https://hivoco7680.amocrm.ru/api/v4/leads?page=${page}&limit=${limit}`, {
@@ -14,12 +15,27 @@ async function getLeads(page, limit = 3){
     })
     return await data.json()
   } catch (err) {
-    const errorText = document.createTextNode(`Ошибка при получении данных: ${err}`);
-    document.body.appendChild(errorText);
+    showError(err)
     console.error('ошибка в получении данных: ', err);
   }
 }
+async function getTaskInfo(id){
+  try {
+    const data = await fetch(`https://hivoco7680.amocrm.ru/api/v4/leads/${id}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${tokens.access_token}`,
+        'Content-Type': 'application/json'
+      }
+    })
+    return await data.json()
+  } catch (err) {
+    showError(err)
+    console.error('ошибка при получении таски: ', err);
+  }
+}
 
+// UI
 function addTable(){
   const table = document.createElement('table');
   table.classList.add('amo-table');
@@ -36,16 +52,21 @@ function addTable(){
   `;
   document.body.appendChild(table);
 }
-function addRowInfo(rowElement){
+async function addRowInfo(rowElement){
+  const data = await getTaskInfo(rowElement.id)
+
+  console.log(data.closest_task_at, Date.now());
+
+  setLoading('hide')
   const nextRow = document.createElement('tr');
   nextRow.classList.add('tab-content')
   nextRow.id = rowElement.id
   nextRow.innerHTML = `
-    <th colspan="3">Дополнительная информация о сделке...</th> `
+    <th colspan="3">Название задачи: ${data.name}</th> `
   document.querySelector('tbody').insertBefore(nextRow, rowElement.nextElementSibling)
 }
-
 function showLeadInfo(rowElement, selectedRowId){
+  setLoading('show')
   const tabContent = document.querySelector('.tab-content')
 
   if(!tabContent){
@@ -57,19 +78,36 @@ function showLeadInfo(rowElement, selectedRowId){
     tabContent.remove()
   }
 }
+function showError(err){
+  const errorText = document.createTextNode(`Возникла ошибка: ${err}`);
+  document.body.appendChild(errorText);
+}
+function setLoading(state){
+  if(state === 'show'){
+    const loading = document.createElement('div')
+    loading.className = 'loading'
+    loading.textContent = 'Загрузка...'
+    document.body.appendChild(loading)
+  } else {
+    document.querySelector('.loading').remove()
+  }
+}
 
+// Загрузка таблицы (основная логика)
 get_b.addEventListener('click', async () => {
-  let isGetData = true
+  setLoading('show')
   get_b.disabled = true
+  
   addTable()
   
+  let isGetData = true
   while(isGetData){
-    console.log('getting...');
     const data = await getLeads(page++)
+    console.log(data);
     const leads = data._embedded.leads
     leads.forEach(el => {
       const row = document.createElement('tr');
-      row.addEventListener('click', (event) => showLeadInfo(row, el.id))
+      row.addEventListener('click', () => showLeadInfo(row, el.id))
       row.classList.add('amo-table-row')
       row.id = el.id
       row.innerHTML = `
@@ -79,10 +117,10 @@ get_b.addEventListener('click', async () => {
       `;
       document.querySelector('.amo-table-body').appendChild(row);
     })
-    console.log(leads);
 
-    if(leads.length < limit) isGetData = false
+    if(leads.length < limit){
+      isGetData = false
+      setLoading('hide')
+    }
   }
 })
-
-// document.querySelectorAll('amo-table-row').forEach(el => el.addEventListener('click', () => console.log('clicked')))
