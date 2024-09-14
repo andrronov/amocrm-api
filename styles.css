@@ -42,6 +42,10 @@ body {
    text-align: left;
 }
 
+thead tr th{font-weight: 700;}
+tbody th{font-weight: 500;}
+th{text-align: center;}
+
 .amo-table-head {
    background-color: #4CAF50;
    color: white;

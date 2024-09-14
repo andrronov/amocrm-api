@@ -53,25 +53,43 @@ function addTable(){
   document.body.appendChild(table);
 }
 async function addRowInfo(rowElement){
-  const data = await getTaskInfo(rowElement.id)
-
-  console.log(data.closest_task_at, Date.now());
-
-  setLoading('hide')
-  const nextRow = document.createElement('tr');
-  nextRow.classList.add('tab-content')
-  nextRow.id = rowElement.id
-  nextRow.innerHTML = `
-    <th colspan="3">Название задачи: ${data.name}</th> `
-  document.querySelector('tbody').insertBefore(nextRow, rowElement.nextElementSibling)
+  try {
+    const data = await getTaskInfo(rowElement.id)
+  
+    // Логика с датами и определением, просрочена ли задача
+    const taskDate = new Date(data.closest_task_at * 1000);
+    const dayToday = new Date().getDate();
+    const isTaskLate = (data.closest_task_at - (Date.now() / 1000).toFixed()) > 0 ? (dayToday === taskDate.getDate() ? 'today' : 'later') : 'late'
+        
+    // Отображение карточки задачи
+    const nextRow = document.createElement('tr');
+    nextRow.classList.add('tab-content')
+    nextRow.id = rowElement.id
+    nextRow.innerHTML = `
+    <th colspan="3">Название задачи: ${data.name} Дата: ${taskDate.getDate()}.${taskDate.getMonth() + 1}.${taskDate.getFullYear()} ID статуса задачи: ${data.status_id} Статус выполнения:
+    <svg width="30" height="25" viewBox="0 0 30 30">
+      <circle cx="10" cy="20" r="10" fill="#fff"></circle>
+      <circle cx="10" cy="20" r="10" fill="${ isTaskLate === 'late' ? '#FF0000' : isTaskLate === 'today' ? '#008000' : '#FFFF00' }"></circle>
+    </svg>
+    `
+    document.querySelector('tbody').insertBefore(nextRow, rowElement.nextElementSibling)
+    
+  } catch (err) {
+    showError(err)
+    console.error('ошибка при получении таски: ', err);
+  } finally {
+    setLoading('hide')
+  }
 }
 function showLeadInfo(rowElement, selectedRowId){
-  setLoading('show')
+  // Переключение между карточками задач
   const tabContent = document.querySelector('.tab-content')
-
+  
   if(!tabContent){
+    setLoading('show')
     addRowInfo(rowElement)
   } else if (selectedRowId != tabContent?.id){
+    setLoading('show')
     tabContent.remove()
     addRowInfo(rowElement)
   } else {
@@ -103,9 +121,9 @@ get_b.addEventListener('click', async () => {
   let isGetData = true
   while(isGetData){
     const data = await getLeads(page++)
-    console.log(data);
     const leads = data._embedded.leads
     leads.forEach(el => {
+      // Добавление строк в таблицу
       const row = document.createElement('tr');
       row.addEventListener('click', () => showLeadInfo(row, el.id))
       row.classList.add('amo-table-row')
