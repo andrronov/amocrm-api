@@ -15,6 +15,7 @@ async function getLeads(page, limit = 3){
     })
     return await data.json()
   } catch (err) {
+    setLoading('hide')
     showError(err)
     console.error('ошибка в получении данных: ', err);
   }
